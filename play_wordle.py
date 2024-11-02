@@ -15,7 +15,7 @@ def eliminate_possible_guesses(guess, word_list, matches):
             filtered_list = [word for word in filtered_list if word[i] == guess[i]]
 
         elif matches[i] == PARTIAL_MATCH:
-            filtered_list = [word for word in filtered_list if word[i] != guess[i] and word.count(guess[i]) >= guess[:i+1].count(guess[i])] #fix for multiple letters
+            filtered_list = [word for word in filtered_list if word[i] != guess[i] and word.count(guess[i]) >= guess[:i+1].count(guess[i])]
 
         else:
             filtered_list = [word for word in filtered_list if word.count(guess[i]) < guess.count(guess[i])] #fix for multiple letters
