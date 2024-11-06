@@ -1,6 +1,6 @@
 from wordle import Matches, Status, PlayResponse, play
-from agilec_spellcheck_service import validate_guess
-from agilec_randomizer_service import get_word_list, get_a_random_word
+from validate_guess import validate_guess
+from word_randomizer import get_word_list, get_a_random_word
 
 
 globals().update(PlayResponse.__members__)
@@ -24,7 +24,7 @@ def eliminate_possible_guesses(guess, word_list, matches):
             
 
 #game set up
-for i in range(1000000):
+for i in range(1000):
     target_length = 5
     max_attempts = 6
     attempt = 0
@@ -44,6 +44,7 @@ for i in range(1000000):
     while True:
         try:
             guess = get_a_random_word(word_pool) #implement a starter_word/good guessing algo'
+        
         except Exception as e:
             print(e)
             print( guess_list, target.upper())
@@ -53,8 +54,8 @@ for i in range(1000000):
         result = play(target, guess, attempt, validate_guess)
 
         if result[GAME_STATUS] != IN_PROGRESS:
-           # print(result[GAME_STATUS], result[ATTEMPTS], target)
-            break
+           print(result[GAME_STATUS], result[ATTEMPTS], target)
+           break
 
         word_pool = eliminate_possible_guesses(guess, word_pool, result[TALLY_RESPONSE])
         pool_list.append(word_pool)

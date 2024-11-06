@@ -1,7 +1,7 @@
 import tkinter as tk
 from wordle import Status, PlayResponse, play
-from agilec_spellcheck_service import is_spelling_correct
-from agilec_randomizer_service import get_word_list, get_a_random_word
+from validate_guess import is_spelling_correct
+from word_randomizer import get_word_list, get_a_random_word
 
 
 globals().update(PlayResponse.__members__)
