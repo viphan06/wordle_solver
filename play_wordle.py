@@ -9,14 +9,18 @@ globals().update(Matches.__members__)
 
 def eliminate_possible_guesses(guess, word_list, matches):
     filtered_list = word_list
-    for i in range(len(matches)):
-
-        if matches[i] == EXACT_MATCH:
+    for i in range(len(matches)): #loops through the guess result
+        
+#green match: takes in all words with letter in same position as green position and discards the rest
+        if matches[i] == EXACT_MATCH: 
             filtered_list = [word for word in filtered_list if word[i] == guess[i]]
-
-        elif matches[i] == PARTIAL_MATCH:
+            
+        #yellow match: removes all words with letter as same position as the yellow
+        #removes all words where the count of the letter is less than the count of the letter in the guess word up to that index
+        elif matches[i] == PARTIAL_MATCH: 
             filtered_list = [word for word in filtered_list if word[i] != guess[i] and word.count(guess[i]) >= guess[:i+1].count(guess[i])]
-
+            
+        #gray match removes all words with the letter count greater than letter count in guess
         else:
             filtered_list = [word for word in filtered_list if word.count(guess[i]) < guess.count(guess[i])] #fix for multiple letters
     return filtered_list
