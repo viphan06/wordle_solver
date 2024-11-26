@@ -1,140 +1,162 @@
-import tkinter as tk
-from wordle import Status, PlayResponse, play
-from validate_guess import is_spelling_correct
-from word_randomizer import get_word_list, get_a_random_word
+import pygame, random
+from wordle import play, Matches, PlayResponse, Status
+
+# Initializes pygame
+pygame.init()
+
+# Constants
+SCREEN_WIDTH, SCREEN_HEIGHT = 650, 800
+GRID_ROWS, GRID_COLS = 6, 5
+CELL_SIZE = 80
+MARGIN = 10
+FONT_SIZE = 50
+BG_COLOR = (255, 255, 255)
+TEXT_COLOR_DEFAULT = (0, 0, 0)  # Before submitting, font is black
+TEXT_COLOR = (255, 255, 255)  # After submitting guess, font is white
+DEFAULT_CELL = (211, 211, 211)
+CELL_COLORS = {
+    Matches.EXACT_MATCH: (105, 169, 100),    # Green
+    Matches.PARTIAL_MATCH: (201, 180, 85),  # Yellow
+    Matches.WRONG_MATCH: (247, 102, 95),    # Red
+}
+
+# Title setup
+title_font = pygame.font.Font("assets/HelveticaNeue.ttc", 50)
+title_surface = title_font.render("WORDLE SOLVER", True, TEXT_COLOR_DEFAULT)  # Render the title
+title_rect = title_surface.get_rect(center=(SCREEN_WIDTH // 2, 50))  # Position at the top center
+
+# Get random word from word list
+def get_word(file_path):
+    with open(file_path, "r") as file:
+        words = [line.strip().upper() for line in file.readlines()]
+    return words
+
+# Load the words
+word_list = get_word("wordle-allowed-guesses.txt")
+
+# Pick random target word
+def reset_target_word():
+    return random.choice(word_list)
+
+# Initial target word
+target_word = reset_target_word()
+print(f"Target word: {target_word}")  # For debugging
+
+# Set up screen
+screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+pygame.display.set_caption("Wordle Solver")
+
+# Set up fonts
+font = pygame.font.Font("assets/HelveticaNeue.ttc", FONT_SIZE)
+
+# Load Play Again button
+play_again_image = pygame.image.load("assets/play_again_button.png")
+play_again_rect = play_again_image.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT - 100))
 
 
-globals().update(PlayResponse.__members__)
-globals().update(Status.__members__)
+# Game state variables
+letters = [["" for _ in range(5)] for _ in range(6)]  # Empty grid: 6 rows, 5 columns
+grid_colors = [[DEFAULT_CELL for _ in range(5)] for _ in range(6)]  # All cells default color
+current_row = 0
+current_col = 0
 
+# Game state variables
+def reset_game_state():
+    global letters, grid_colors, current_row, current_col, target_word
+    letters = [["" for _ in range(5)] for _ in range(6)]  # Empty grid: 6 rows, 5 columns
+    grid_colors = [[DEFAULT_CELL for _ in range(5)] for _ in range(6)]  # All cells default color
+    current_row = 0
+    current_col = 0
+    target_word = reset_target_word()
+    print(f"New target word: {target_word}")  # Debugging
 
-TARGET_LENGTH = 5
-MAX_ATTEMPTS = 6
-attempt = 0
+#reset_game_state()  # Initialize game state
 
+grid_start_x = 100
+grid_start_y = 100
 
-def create_wordle_board():
-    wordle_board = []
+# Draw the grid and letters
+def draw_grid():
+    for row in range(6):  # 6 rows for Wordle
+        for col in range(5):  # 5 columns
+            x = grid_start_x + col * (CELL_SIZE + MARGIN)
+            y = grid_start_y + row * (CELL_SIZE + MARGIN)
 
-    for row in range(MAX_ATTEMPTS):
-        wordle_row = []
+            # Draw rectangle
+            pygame.draw.rect(screen, grid_colors[row][col], (x, y, CELL_SIZE, CELL_SIZE), border_radius=5)
 
-        for col in range(TARGET_LENGTH):
-            block = tk.Label(height = 3, width = 6, borderwidth = 1, relief = 'solid')
-            block.grid(row = row + 1, column = col, padx = 1, pady = 1)
-            wordle_row.append(block) 
+            # Draw letter
+            if letters[row][col]:
+                letter_color = TEXT_COLOR if grid_colors[row][col] != DEFAULT_CELL else TEXT_COLOR_DEFAULT
+                letter_surface = font.render(letters[row][col], True, letter_color)
+                letter_rect = letter_surface.get_rect(center=(x + CELL_SIZE // 2, y + CELL_SIZE // 2))
+                screen.blit(letter_surface, letter_rect)
 
-        wordle_board.append(wordle_row)
+# Draw Play Again button
+def draw_play_again_button():
+    screen.blit(play_again_image, play_again_rect)
 
-    return wordle_board
+# Evaluate the current guess
+def evaluate_guess():
+    global current_row
 
-def validate_entry(next_char, full_text):
-    if len(full_text) > TARGET_LENGTH:
-        return False 
+    guess = "".join(letters[current_row])  # Combine the row's letters into a single word
+    if len(guess) == 5:  # Only evaluate if the row is full
+        response = play(target_word, guess, current_row)
 
-    return next_char.isalpha()
+        # Update grid colors based on the response
+        tally_response = response[PlayResponse.TALLY_RESPONSE]
+        for col, match in enumerate(tally_response):
+            grid_colors[current_row][col] = CELL_COLORS[match]
 
-def update_entry_on_labels(*args): 
-    cur_entry = entry_str.get()
+        # Advance to the next row
+        if current_row < GRID_ROWS - 1:
+            current_row += 1
 
-    for i in range(TARGET_LENGTH):
+# Main game loop
+running = True
+while running:
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            running = False
 
-        if i < len(cur_entry):
-            wordleBoard[attempt][i].config(text = cur_entry[i].upper())
+        if event.type == pygame.KEYDOWN:
+            # Handle backspace to remove the last letter
+            if event.key == pygame.K_BACKSPACE:
+                if current_col > 0:
+                    current_col -= 1
+                    letters[current_row][current_col] = ""
 
-        else:
-            wordleBoard[attempt][i].config(text = "")
+            # Handle Enter to evaluate the guess and move to the next row
+            elif event.key == pygame.K_RETURN:
+                if current_col == 5:  # Ensure row is full
+                    evaluate_guess()
+                    current_col = 0
 
-    if len(cur_entry) != TARGET_LENGTH:
-        guessButton.config(state = 'disabled')
+            # Handle typing letters
+            elif event.unicode.isalpha():
+                if current_col < 5:  # Stay within the column limit
+                    letters[current_row][current_col] = event.unicode.upper()
+                    current_col += 1
 
-    else:
-        guessButton.config(state = 'normal')
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            # Check if Play Again button was clicked
+            if play_again_rect.collidepoint(event.pos):
+                reset_game_state()
 
-def evaluateGuess(target):
-    guess = guessBox.get()
-    guess = guess.upper()
+    # Fill the screen with background color
+    screen.fill(BG_COLOR)
 
-    guessBox.delete('0', tk.END)
+    # Draw the title
+    screen.blit(title_surface, title_rect)
 
-    global attempt
-    try:
-        gameStats = play(target, guess, attempt, is_spelling_correct)
+    # Draw the grid
+    draw_grid()
 
-        if gameStats[GAME_STATUS] == IN_PROGRESS:
+    # Draw Play Again button
+    draw_play_again_button()
 
-            for i in range(TARGET_LENGTH):
-                color = gameStats[TALLY_RESPONSE][i].value
-                wordleBoard[attempt][i].config(bg = color, text = guess[i].upper())
-        else:
-            endMessage(gameStats[GAME_STATUS], gameStats[MESSAGE])
-            guessButton.config(state = 'disabled')
-    
-        attempt = gameStats[ATTEMPTS]
-    except ValueError:
-        guessButton.config(state = 'disabled')
-        showeErrorWindow()
-        clearRow(attempt)
+    # Update the display
+    pygame.display.flip()
 
-        
-def showeErrorWindow():
-    errorWindow = tk.Toplevel(window)
-    errorWindow.geometry("400x200")
-    errorWindow.resizable(False, False)
-
-
-def close_error_window(errorWindow):
-    errorWindow.destroy()
-    errorWindow.update()
-
-def clearRow(row):
-    for i in range(TARGET_LENGTH):
-        wordleBoard[attempt][i].config(text = "")
-
-
-def exitGame(endWindow):
-    endWindow.destroy()
-    window.destroy()
-
-    endWindow.update()
-    window.update()
-
-def endMessage(status, endMessage):
-    endWindow = tk.Toplevel(window)
-    endWindow.geometry("400x200")
-    endWindow.resizable(False, False) 
-
-    title = tk.Label(endWindow, text = endMessage)
-    title.pack(padx = 100, pady = 50)
-
-    close_button = tk.Button(endWindow, text = "close game", command = lambda: exitGame(endWindow))
-    close_button.pack()
-    
-    if status == WIN:
-        endWindow.title("Congratulations!")
-    else:
-        endWindow.title("Game Over")
-
-
-window = tk.Tk()
-
-window.geometry("240x500")
-window.title("Wordle")
-
-title = tk.Label(window, text = "Wordle", font = ('Arial Black', 18))
-title.grid(row = 0, column = 0, columnspan = 5, padx = 20, pady = 20)
-
-wordleBoard = create_wordle_board()
-
-word_pool = get_word_list()
-target = get_a_random_word(word_pool)
-
-entry_str = tk.StringVar()
-guessBox = tk.Entry(validate = "key", validatecommand = (window.register(validate_entry), "%S", "%P"), textvariable = entry_str)
-guessBox.grid(row = 7, column = 0, columnspan = 5, padx = 20, pady = 10)
-entry_str.trace('w', update_entry_on_labels)
-
-guessButton = tk.Button(state = "disabled", text = "Guess", command = lambda: evaluateGuess(target))
-guessButton.grid(row = 8, column = 0, columnspan = 5)
-
-window.mainloop()
+pygame.quit()
