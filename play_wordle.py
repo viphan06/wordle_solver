@@ -28,7 +28,11 @@ def eliminate_possible_guesses(guess, word_list, matches):
             
 
 #game set up
-for i in range(1000):
+win_count = 0
+loss_count = 0
+sum_guesses = 0
+num_games = 1000
+for i in range(num_games):
     target_length = 5
     max_attempts = 6
     attempt = 0
@@ -48,17 +52,22 @@ for i in range(1000):
     while True:
         try:
             guess = get_a_random_word(word_pool) #implement a starter_word/good guessing algo'
-        
         except Exception as e:
             print(e)
             print( guess_list, target.upper())
             for pol in pool_list:
                 print(pol)
+
+
         guess_list.append(guess)
         result = play(target, guess, attempt, validate_guess)
 
         if result[GAME_STATUS] != IN_PROGRESS:
-           print(result[GAME_STATUS], result[ATTEMPTS], target)
+           if result[GAME_STATUS] == WIN:
+               sum_guesses += result[ATTEMPTS]
+               win_count += 1
+           else:
+               loss_count += 1
            break
 
         word_pool = eliminate_possible_guesses(guess, word_pool, result[TALLY_RESPONSE])
@@ -66,3 +75,12 @@ for i in range(1000):
         attempt = result[ATTEMPTS]
 
 
+win_rate = win_count/num_games
+loss_rate = loss_count/num_games
+avg_guesses = sum_guesses/num_games
+efficency_score = win_rate/avg_guesses
+
+print("win rate:", win_rate)
+print("loss rate:", loss_rate)
+print("average guesses:", avg_guesses)
+print("efficiency score:", efficency_score)
