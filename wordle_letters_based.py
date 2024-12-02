@@ -30,7 +30,7 @@ def eliminate_possible_guesses(guess, word_list, matches):
 win_count = 0
 loss_count = 0
 sum_guesses = 0
-num_games = 100000
+num_games = 10000
 
 for i in range(num_games):
     target_length = 5
