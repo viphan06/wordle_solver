@@ -1,55 +1,98 @@
-from collections import Counter
 from wordle import Matches, Status, PlayResponse, play
+from validate_guess import validate_guess
 from word_randomizer import get_word_list, get_a_random_word
-from constraint_propagation import eliminate_possible_guesses
 
-def get_letter_frequencies(word_list):
-    # Flatten the list of words into a single string and count the frequency of each letter
-    all_letters = ''.join(word_list)
-    return Counter(all_letters)
+globals().update(PlayResponse.__members__)
+globals().update(Status.__members__)
+globals().update(Matches.__members__)
 
-def make_guess(word_list, letter_frequencies, guessed_words):
-    # Score each word based on the frequency of its letters
-    word_scores = {word: sum(letter_frequencies[letter] for letter in word) for word in word_list if word not in guessed_words}
-    # Return the word with the highest score
-    if word_scores:
-        return max(word_scores, key=word_scores.get)
-    else:
-        return None
+def calculate_letter_frequencies(word_list):
+    """Calculate the frequency of each letter in the word list."""
+    from collections import Counter
+    letter_counts = Counter()
+    for word in word_list:
+        letter_counts.update(set(word))
+    return letter_counts
 
-def play_wordle_with_frequency():
-    word_list = get_word_list()
-    target_word = get_a_random_word(word_list)
-    letter_frequencies = get_letter_frequencies(word_list)
-    
-    max_attempts = 6
-    attempts = 0
-    guessed_correctly = False
-    guessed_words = set()
 
-    while attempts < max_attempts and not guessed_correctly:
-        guess = make_guess(word_list, letter_frequencies, guessed_words)
-        if not guess:
-            print("No more words to guess.")
-            break
-        print(f"Attempt {attempts + 1}: Guessing '{guess}'")
-        
-        if guess == target_word:
-            guessed_correctly = True
-            print("Guessed correctly!")
+def score_words(word_list, letter_frequencies):
+    """Score words based on the frequency of their unique letters."""
+    scored_words = {}
+    for word in word_list:
+        scored_words[word] = sum(letter_frequencies[char] for char in set(word))
+    return scored_words
+
+def get_best_guess(word_list):
+    """Get the word with the highest score."""
+    letter_frequencies = calculate_letter_frequencies(word_list)
+    scored_words = score_words(word_list, letter_frequencies)
+    return max(scored_words, key=scored_words.get)
+
+def eliminate_possible_guesses(guess, word_list, matches):
+    filtered_list = word_list
+    for i in range(len(matches)):
+
+        # Green match
+        if matches[i] == EXACT_MATCH:
+            filtered_list = [word for word in filtered_list if word[i] == guess[i]]
+
+        # Yellow match
+        elif matches[i] == PARTIAL_MATCH:
+            filtered_list = [
+                word for word in filtered_list
+                if word[i] != guess[i] and word.count(guess[i]) >= guess[:i+1].count(guess[i])
+            ]
+
+        # Gray match
         else:
-            # Add the guess to the set of guessed words
-            guessed_words.add(guess)
-            # Get the match results (this would be provided by the game logic)
-            matches = [Matches.EXACT_MATCH if guess[i] == target_word[i] else Matches.PARTIAL_MATCH if guess[i] in target_word else Matches.WRONG_MATCH for i in range(len(guess))]
-            # Filter the word list based on the guess and matches
-            word_list = eliminate_possible_guesses(guess, word_list, matches)
-            letter_frequencies = get_letter_frequencies(word_list)
-        
-        attempts += 1
+            filtered_list = [
+                word for word in filtered_list
+                if word.count(guess[i]) < guess.count(guess[i])
+            ]
+    return filtered_list
 
-    if not guessed_correctly:
-        print(f"Failed to guess the word. The correct word was '{target_word}'.")
+win_count = 0
+loss_count = 0
+sum_guesses = 0
+num_games = 10000
+for i in range(num_games):
+    target_length = 5
+    max_attempts = 6
+    attempt = 0
+    status = Status.IN_PROGRESS
 
-if __name__ == "__main__":
-    play_wordle_with_frequency()
+    word_pool = get_word_list()
+
+    target = get_a_random_word(word_pool)
+
+    # Guesser
+    while True:
+        try:
+            guess = get_best_guess(word_pool)
+        except Exception as e:
+            print(e)
+
+
+        result = play(target, guess, attempt, validate_guess)
+
+        if result[GAME_STATUS] != IN_PROGRESS:
+           if result[GAME_STATUS] == WIN:
+               sum_guesses += result[ATTEMPTS]
+               win_count += 1
+           else:
+               loss_count += 1
+           break
+
+        word_pool = eliminate_possible_guesses(guess, word_pool, result[TALLY_RESPONSE])
+        attempt = result[ATTEMPTS]
+
+
+win_rate = win_count/num_games
+loss_rate = loss_count/num_games
+avg_guesses = sum_guesses/num_games
+efficiency_score = win_rate/avg_guesses
+
+print("win rate:", win_rate)
+print("loss rate:", loss_rate)
+print("average guesses:", avg_guesses)
+print("efficiency score:", efficiency_score)
