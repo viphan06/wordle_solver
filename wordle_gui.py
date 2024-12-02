@@ -20,10 +20,51 @@ CELL_COLORS = {
     Matches.WRONG_MATCH: (247, 102, 95),    # Red
 }
 
+# Set up fonts
+font = pygame.font.Font("assets/HelveticaNeue.ttc", FONT_SIZE)
+
 grid_start_x = 100
 grid_start_y = 180
 
 # ----------------------------------- Menu -----------------------------------
+def show_menu():
+    menu_running = True
+    selected_algorithm = None
+    algorithms = [
+        "Constraint Propagation",
+        "Frequency-Based",
+        "Information Gain",
+        "Rule Based"
+    ]
+    # Text
+    word_font = pygame.font.Font(None, 32)
+    word_surface = word_font.render("Pick an algorithm:", True, (102,160,96))
+    word_rect = word_surface.get_rect(center=(SCREEN_WIDTH // 2, 200))
+    screen.blit(word_surface, word_rect)
+
+    button_gap = 115
+    button_y = 290
+
+    # Load algorithm buttons
+    constraint_propagation_image = pygame.image.load("assets/constraint_propagation_button.png")
+    constraint_propagation_rect = constraint_propagation_image.get_rect(center=(SCREEN_WIDTH // 2, button_y)) 
+    button_y += button_gap
+
+    frequency_based_image = pygame.image.load("assets/frequency_based_button.png")
+    frequency_based_rect = frequency_based_image.get_rect(center=(SCREEN_WIDTH // 2, button_y))
+    button_y += button_gap
+
+    information_gain_image = pygame.image.load("assets/information_gain_button.png")
+    information_gain_rect = information_gain_image.get_rect(center=(SCREEN_WIDTH // 2, button_y))
+    button_y += button_gap
+
+    rule_based_image = pygame.image.load("assets/rule_based_button.png")
+    rule_based_rect = rule_based_image.get_rect(center=(SCREEN_WIDTH // 2, button_y))
+
+    screen.blit(constraint_propagation_image, constraint_propagation_rect)
+    screen.blit(frequency_based_image, frequency_based_rect)
+    screen.blit(information_gain_image, information_gain_rect)
+    screen.blit(rule_based_image, rule_based_rect)
 
 # ------------------------------ Utility Functions ------------------------------
 # Get random word from word list
@@ -46,9 +87,6 @@ print(f"Target word: {target_word}")  # For debugging
 # Set up screen
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 pygame.display.set_caption("Wordle Solver")
-
-# Set up fonts
-font = pygame.font.Font("assets/HelveticaNeue.ttc", FONT_SIZE)
 
 # Load Play Again button
 play_again_image = pygame.image.load("assets/play_again_button.png")
@@ -131,8 +169,8 @@ while running:
                 print("Exiting...")
         if event.type == pygame.QUIT:
            running = False
-
-        
+        '''
+        ------just for testing--------
         if event.type == pygame.KEYDOWN:
             # Handle backspace to remove the last letter
             if event.key == pygame.K_BACKSPACE:
@@ -156,11 +194,13 @@ while running:
             # Check if Play Again button was clicked
             if play_again_rect.collidepoint(event.pos):
                 reset_game_state()
+        '''
 
     screen.fill(BG_COLOR)
     draw_title()
-    draw_grid()
-    draw_play_again_button()
+    show_menu()
+    #draw_grid()
+    #draw_play_again_button()
     pygame.display.flip()
 
 pygame.quit()
