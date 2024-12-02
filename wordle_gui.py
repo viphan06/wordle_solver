@@ -132,7 +132,7 @@ while running:
         if event.type == pygame.QUIT:
            running = False
 
-        '''
+        
         if event.type == pygame.KEYDOWN:
             # Handle backspace to remove the last letter
             if event.key == pygame.K_BACKSPACE:
@@ -151,9 +151,7 @@ while running:
                 if current_col < 5:  # Stay within the column limit
                     letters[current_row][current_col] = event.unicode.upper()
                     current_col += 1
-        
-        '''
-
+    
         if event.type == pygame.MOUSEBUTTONDOWN:
             # Check if Play Again button was clicked
             if play_again_rect.collidepoint(event.pos):
