@@ -41,7 +41,7 @@ for first_word in starter_words:
     attempts_list = []       
 
     #game set up
-    for i in range(1000):
+    for i in range(10000):
         target_length = 5
         max_attempts = 6
         attempt = 0
@@ -66,7 +66,7 @@ for first_word in starter_words:
                     guess = first_word
                     first_guess = False
                 else:
-                    guess = get_a_random_word(word_pool) #implement a starter_word/good guessing algo'
+                    guess = get_a_random_word(word_pool) 
 
 
             except Exception as e:
@@ -88,11 +88,13 @@ for first_word in starter_words:
             pool_list.append(word_pool)
             attempt = result[ATTEMPTS]
     
-    win_rate = win_count/1000
+    win_rate = win_count/10000
     if attempts_list:
         average_guesses = sum(attempts_list) / len(attempts_list)
     else:
         average_guesses = 0
-    print(f"\tWin Rate: {win_rate}\n\tAvg. # Guesses per Game: {round(average_guesses, 2)}")
+    efficiency_score = win_rate/average_guesses
+    loss_rate = 1-win_rate
+    print(f"\tWin Rate: {round(win_rate,1)}\n\tLoss Rate: {round(loss_rate,1)}\n\tAvg. # Guesses per Game: {round(average_guesses, 2)}\n\tEfficiency Score: {round(efficiency_score,2)}")
 
 
