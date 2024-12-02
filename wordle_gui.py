@@ -1,10 +1,10 @@
 import pygame, random
-from wordle import play, Matches, PlayResponse, Status
+from wordle import play, Matches, PlayResponse
 
 # Initializes pygame
 pygame.init()
 
-# Constants
+# ------------------------------ Constants ------------------------------
 SCREEN_WIDTH, SCREEN_HEIGHT = 650, 900
 GRID_ROWS, GRID_COLS = 6, 5
 CELL_SIZE = 80
@@ -20,14 +20,12 @@ CELL_COLORS = {
     Matches.WRONG_MATCH: (247, 102, 95),    # Red
 }
 
-# Title setup
-'''
-title_font = pygame.font.Font("assets/HelveticaNeue.ttc", 50)
-title_surface = title_font.render("WORDLE SOLVER", True, TEXT_COLOR_DEFAULT)  # Render the title
-title_rect = title_surface.get_rect(center=(SCREEN_WIDTH // 2, 50))  # Position at the top center
-'''
+grid_start_x = 100
+grid_start_y = 180
 
+# ----------------------------------- Menu -----------------------------------
 
+# ------------------------------ Utility Functions ------------------------------
 # Get random word from word list
 def get_word(file_path):
     with open(file_path, "r") as file:
@@ -56,7 +54,6 @@ font = pygame.font.Font("assets/HelveticaNeue.ttc", FONT_SIZE)
 play_again_image = pygame.image.load("assets/play_again_button.png")
 play_again_rect = play_again_image.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT - 100))
 
-
 # Game state variables
 letters = [["" for _ in range(5)] for _ in range(6)]  # Empty grid: 6 rows, 5 columns
 grid_colors = [[DEFAULT_CELL for _ in range(5)] for _ in range(6)]  # All cells default color
@@ -73,11 +70,7 @@ def reset_game_state():
     target_word = reset_target_word()
     print(f"New target word: {target_word}")  # Debugging
 
-#reset_game_state()  # Initialize game state
-
-grid_start_x = 100
-grid_start_y = 180
-
+# ------------------------------ Drawing Functions ------------------------------
 # Draw the grid and letters
 def draw_grid():
     for row in range(6):  # 6 rows for Wordle
@@ -99,6 +92,15 @@ def draw_grid():
 def draw_play_again_button():
     screen.blit(play_again_image, play_again_rect)
 
+# Load the title image
+title_image = pygame.image.load("assets/title.png")
+title_rect = title_image.get_rect(center=(SCREEN_WIDTH // 2, 100))  # Position the title at the top center
+
+# Draw the title image
+def draw_title():
+    screen.blit(title_image, title_rect)
+
+# ------------------------------ Game Logic ------------------------------
 # Evaluate the current guess
 def evaluate_guess():
     global current_row
@@ -116,22 +118,21 @@ def evaluate_guess():
         if current_row < GRID_ROWS - 1:
             current_row += 1
 
-# Load the title image
-title_image = pygame.image.load("assets/title.png")
-title_rect = title_image.get_rect(center=(SCREEN_WIDTH // 2, 100))  # Position the title at the top center
-
-# Draw the title image
-def draw_title():
-    screen.blit(title_image, title_rect)
-
-
+# ------------------------------ Main Game Loop ------------------------------
 # Main game loop
 running = True
 while running:
     for event in pygame.event.get():
+        # Check for key presses
+        if event.type == pygame.KEYDOWN:
+            # Check if Ctrl + Q is pressed
+            if event.key == pygame.K_q and pygame.key.get_mods() & pygame.KMOD_CTRL:
+                running = False
+                print("Exiting...")
         if event.type == pygame.QUIT:
-            running = False
+           running = False
 
+        '''
         if event.type == pygame.KEYDOWN:
             # Handle backspace to remove the last letter
             if event.key == pygame.K_BACKSPACE:
@@ -150,6 +151,8 @@ while running:
                 if current_col < 5:  # Stay within the column limit
                     letters[current_row][current_col] = event.unicode.upper()
                     current_col += 1
+        
+        '''
 
         if event.type == pygame.MOUSEBUTTONDOWN:
             # Check if Play Again button was clicked
