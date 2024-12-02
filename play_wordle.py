@@ -43,23 +43,15 @@ for i in range(num_games):
 
     target = get_a_random_word(word_pool)
 
-
-    guess_list = []
-    pool_list = []
-
     #guesser
 
     while True:
         try:
-            guess = get_a_random_word(word_pool) #implement a starter_word/good guessing algo'
+            guess = get_a_random_word(word_pool)
         except Exception as e:
             print(e)
-            print( guess_list, target.upper())
-            for pol in pool_list:
-                print(pol)
 
 
-        guess_list.append(guess)
         result = play(target, guess, attempt, validate_guess)
 
         if result[GAME_STATUS] != IN_PROGRESS:
@@ -71,7 +63,6 @@ for i in range(num_games):
            break
 
         word_pool = eliminate_possible_guesses(guess, word_pool, result[TALLY_RESPONSE])
-        pool_list.append(word_pool)
         attempt = result[ATTEMPTS]
 
 
