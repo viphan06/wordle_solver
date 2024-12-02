@@ -5,7 +5,7 @@ from wordle import play, Matches, PlayResponse, Status
 pygame.init()
 
 # Constants
-SCREEN_WIDTH, SCREEN_HEIGHT = 650, 800
+SCREEN_WIDTH, SCREEN_HEIGHT = 650, 900
 GRID_ROWS, GRID_COLS = 6, 5
 CELL_SIZE = 80
 MARGIN = 10
@@ -21,9 +21,12 @@ CELL_COLORS = {
 }
 
 # Title setup
+'''
 title_font = pygame.font.Font("assets/HelveticaNeue.ttc", 50)
 title_surface = title_font.render("WORDLE SOLVER", True, TEXT_COLOR_DEFAULT)  # Render the title
 title_rect = title_surface.get_rect(center=(SCREEN_WIDTH // 2, 50))  # Position at the top center
+'''
+
 
 # Get random word from word list
 def get_word(file_path):
@@ -73,7 +76,7 @@ def reset_game_state():
 #reset_game_state()  # Initialize game state
 
 grid_start_x = 100
-grid_start_y = 100
+grid_start_y = 180
 
 # Draw the grid and letters
 def draw_grid():
@@ -113,6 +116,15 @@ def evaluate_guess():
         if current_row < GRID_ROWS - 1:
             current_row += 1
 
+# Load the title image
+title_image = pygame.image.load("assets/title.png")
+title_rect = title_image.get_rect(center=(SCREEN_WIDTH // 2, 100))  # Position the title at the top center
+
+# Draw the title image
+def draw_title():
+    screen.blit(title_image, title_rect)
+
+
 # Main game loop
 running = True
 while running:
@@ -144,19 +156,10 @@ while running:
             if play_again_rect.collidepoint(event.pos):
                 reset_game_state()
 
-    # Fill the screen with background color
     screen.fill(BG_COLOR)
-
-    # Draw the title
-    screen.blit(title_surface, title_rect)
-
-    # Draw the grid
+    draw_title()
     draw_grid()
-
-    # Draw Play Again button
     draw_play_again_button()
-
-    # Update the display
     pygame.display.flip()
 
 pygame.quit()
